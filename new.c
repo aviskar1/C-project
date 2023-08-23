@@ -43,6 +43,7 @@ int lendFileWithoutName(char tmp[100])
     // tmp[strcspn(tmp, "\n")] = '\0';
     fprintf(lend, "%s\n", tmp);
     fclose(lend);
+    return 0;
 }
 // Making a file function for writing to lend.
 int lendfiles(char tmp[100], char name[100])
@@ -70,6 +71,7 @@ int writeToAvailableBooks(char bookID[10], char bookName[50])
     }
     fprintf(fptr, "%s %s \n", bookID, bookName);
     fclose(fptr);
+    return 0;
 
     
 }
@@ -78,7 +80,7 @@ int writeToAvailableBooks(char bookID[10], char bookName[50])
 
 
 // Work in progress
-int removeFromLenders(char bookID[10], char bookName[50])
+int removeFromLenders(char bookID[10])
 {
     char id[10];
     char temp[100];
@@ -149,6 +151,7 @@ int returnfiles(char bookID[10], char bookName[50])
         }
         fprintf(returns, "%s %s returned on %s\n", bookID, bookName, times());
         fclose(returns);
+        return 0;
 }
 
 
@@ -234,15 +237,15 @@ int returnBooks(char bookID[10], char bookName[50])
 
     char bookinlend[50];    // Which have data from fgerts
     char tempid[10];    // ID from lendersWithoutName.txt
-    char id[10];    // ID of book in the file
+    // char id[10];    // ID of book in the file
     // char bookID[10], bookName[50];  // Id and bookname that user will enter to return
     char bookFromLendersWNTxt[50];
     FILE *fptr;
     FILE *lend;
     FILE *lendWithoutName;
 
-    char tmp[100];
-    int count = 0;
+    // char tmp[100];
+    // int count = 0;
     fptr = fopen(AvailableBooks, "a");
     lend = fopen(BooksLended, "a");
     lendWithoutName = fopen(BooksLendedWithoutNames, "a+");
@@ -326,7 +329,7 @@ int returnBooks(char bookID[10], char bookName[50])
 
                 returnfiles(bookID, bookName);
                 writeToAvailableBooks(bookID, bookName);
-                removeFromLenders(bookID, bookName);
+                removeFromLenders(bookID);
                 return 0;
             }
             else
@@ -338,7 +341,7 @@ int returnBooks(char bookID[10], char bookName[50])
 
         }
 
- 
+
         for (int i = 0; tempid[i] != '\0'; i++)
         {
             tempid[i] = '\0';
@@ -346,7 +349,7 @@ int returnBooks(char bookID[10], char bookName[50])
         // printf("The id is: %s", tempid);
     }
     printf("No book with this id was lended\n");
-        
+    return 0;
 }
 
     
@@ -357,26 +360,40 @@ int addBooks(char bookID[10], char bookName[50])
 {
     char temp[100];
     char id[10];
+    int existStatus = 0;  // Flag to check if ID already exists
     FILE *fptr;
-    fptr = fopen(AvailableBooks, "a+");
+    // FILE *tempFile;
+
+    // Check if the ID already exists in the file
+    fptr = fopen(AvailableBooks, "r");
     while (fgets(temp, sizeof(temp), fptr))
     {
         sscanf(temp, "%s", id);
-        printf("%s", id);
-        if (strcmp(id, bookID) != 0)
+        if (strcmp(id, bookID) == 0)
         {
-            fprintf(fptr, "%s %s", bookID, bookName);
-
+            existStatus = 1;
+            break;
         }
-        else
-        {
-            printf("Id already exists.");
-        }
-        
     }
-    printf("Added Successfully\n");
     fclose(fptr);
+
+    // If the ID exists, display a message and return
+    if (existStatus)
+    {
+        printf("ID already exists.\n");
+        return 0;
+    }
+
+    // Append the new book information to the original file
+    fptr = fopen(AvailableBooks, "a");
+    fprintf(fptr, "\n%s %s", bookID, bookName);
+    fclose(fptr);
+
+    printf("Added Successfully\n");
+    return 0;
 }
+
+
 
 
 
@@ -394,7 +411,7 @@ int main()
 
     // Open file for appending
     FILE *fptr;
-    fptr = fopen(AvailableBooks, "w");
+    fptr = fopen(AvailableBooks, "a");
     if(fptr == NULL)
     {
         printf("Error!");
@@ -402,10 +419,14 @@ int main()
     }
     else
     {
-        printf("File opened successfully \n");
-        fprintf(fptr, "1 C Programming\n31 Engineering Physics\n09 Mathematics");
-        fflush(fptr);
-        fclose(fptr);
+        fseek(fptr, 0, SEEK_END);
+        long fileSize = ftell(fptr);
+        if (fileSize == 0) {
+            // If the file is empty, write the default books
+            fprintf(fptr, "1 C Programming\n31 Engineering Physics\n09 Mathematics");
+            fflush(fptr);
+    }
+    fclose(fptr);
     }
     while (fgets(availableBooks[count], sizeof(availableBooks[count]), fptr) != NULL)
     {
@@ -444,9 +465,9 @@ int main()
     char bookID[10];
     char bookName[50];
     
-    int continues = 1;
+    // int continues = 1;
 
-    do{
+    while(1){
         // Emptying bookID and bookName
         for (int i = 0; bookID[i] != '\0'; i++)
         {
@@ -459,9 +480,18 @@ int main()
         
 
         // Taking choice of user
-        printf("\nEnter 'D' to display books, 'L' to lend books, 'A to add books, 'R' to return books and 'S' to see the lended books: ");
+        printf("\nWhat would you like to do?\n");
+        printf(" - 'D' to display available books.\n");
+        printf(" - 'L' to lend a book.\n");
+        printf(" - 'A' to add new books.\n");
+        printf(" - 'R' to return a book.\n");
+        printf(" - 'S' to see the list of lended books.\n");
+        printf(" - 'E' to exit\n");
+        printf("Your choice: ");
+
         scanf(" %c", &choice);
         choice = toupper(choice);
+
 
         switch (choice)
         {
@@ -522,15 +552,19 @@ int main()
             fclose(lend);
             break;
 
+        case 'E':
+            exit(0);
+            break;
+
         default:
             printf("Invalid input");
             break;
         }
 
-        printf("\n\nPress 0 to exit and 1 to continue: ");
-        scanf("%d", &continues);
+        // printf("\n\nPress 0 to exit and 1 to continue: ");
+        // scanf("%d", &continues);
 
-    }while(continues != 0);
+    }
 
     printf("\n Exited Library Management System");
     return 0;    
