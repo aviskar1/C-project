@@ -72,8 +72,6 @@ int writeToAvailableBooks(char bookID[10], char bookName[50])
     fprintf(fptr, "%s %s \n", bookID, bookName);
     fclose(fptr);
     return 0;
-
-    
 }
 
 
@@ -155,32 +153,29 @@ int returnfiles(char bookID[10], char bookName[50])
 }
 
 
-// To display all the available books
-int displayBooks()
-{
-    char list;
+
+int displayBooks() {
     FILE *fptr;
     fptr = fopen(AvailableBooks, "r");
-    printf("\nID  BOOK \n");
-    printf("----------------------------------------------------------------------------------- \n");
-    if (fptr == NULL)
-    {
+    
+    printf("\nID    BOOK\n");
+    printf("----------------------------\n");
+
+    if (fptr == NULL) {
         printf("Empty file");
-    }
-    else
-    {
-        list = fgetc(fptr);
-        while ((list != EOF))
-        {
-            printf("%c", list);
-            list = fgetc(fptr);
+    } else {
+        char id[10];
+        char bookName[50];
+
+        while (fscanf(fptr, "%s %[^\n]", id, bookName) == 2) {
+            printf("%-6s %-s\n", id, bookName);
         }
-        
-        // printf("\n Display Books");
     }
+
     fclose(fptr);
     return 0;
 }
+
 
 
 
